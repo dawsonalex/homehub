@@ -13,14 +13,19 @@ type UploadState struct {
 }
 
 type chunk struct {
-	w        io.Writer
+	w        io.WriteCloser
 	start    int64
 	end      int64
 	size     int64
 	filename string
 }
 
-func chunkUploadHandler(state UploadState, writerFunc func(uploadId string) io.Writer) http.HandlerFunc {
+type file interface {
+	io.WriteSeeker
+	io.Closer
+}
+
+func chunkUploadHandler(state UploadState, writerFunc func(c chunk) (file, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("X-Upload-ID") == "" || r.Header.Get("Content-Range") == "" {
 			w.WriteHeader(http.StatusBadRequest)
@@ -32,7 +37,7 @@ func chunkUploadHandler(state UploadState, writerFunc func(uploadId string) io.W
 			in the body down the correct writer so that they can be ordered and reassembled at a later point
 			in time.
 
-			Considerations: Does this handler care about timing out unfinished uploads (e.g after 24 hours)
+			Considerations: Does this handler care about timing out unfinished uploads (e.g. after 24 hours)
 
 		 * The general algo here is:
 
@@ -40,36 +45,42 @@ func chunkUploadHandler(state UploadState, writerFunc func(uploadId string) io.W
 		 * 		Create the partial upload info, place to store chunks
 		 * 		Set response code to HTTP 201
 		 *
-		 * Process this chunk
+		 * Write this chunk to storage
 		*/
 
 		uploadId := r.Header.Get("X-Upload-ID")
 		totalSize, partFrom, partTo := parseContentRange(r.Header.Get("Content-Range"))
 
-		if _, ok := state.chunks[uploadId]; !ok {
-			w.WriteHeader(http.StatusCreated)
+		w.WriteHeader(http.StatusOK)
 
-			_, params, err := mime.ParseMediaType(r.Header.Get("Content-Disposition"))
-			if err != nil {
-				panic(err)
-			}
-			filename := params["filename"]
+		_, params, err := mime.ParseMediaType(r.Header.Get("Content-Disposition"))
+		if err != nil {
+			panic(err)
+		}
+		filename := params["filename"]
 
-			// TODO: decide on the chunk persistant method here
-			// we can either have a generator function return writers,
-			// or hardcode chunk storage on disk, but probably not both.
-			thisChunk := chunk{
-				w:        writerFunc(uploadId),
-				size:     totalSize,
-				start:    partFrom,
-				end:      partTo,
-				filename: filename,
-			}
+		// TODO: decide on the chunk persistent method here
+		// we can either have a generator function return writers,
+		// or hardcode chunk storage on disk, but probably not both.
+		thisChunk := chunk{
+			size:     totalSize,
+			start:    partFrom,
+			end:      partTo,
+			filename: filename,
+		}
 
-			// TODO: possibly order chunks (or something) to make stitching them back together easier / faster.
-			state.chunks[uploadId] = append(state.chunks[uploadId], thisChunk)
-		} else {
-			w.WriteHeader(http.StatusOK)
+		f, err := writerFunc(thisChunk)
+		if err != nil {
+			panic(err)
+		}
+		_, err = f.Seek(partFrom, 0)
+		if err != nil {
+			panic(err)
+		}
+
+		written, err := io.CopyN(f, r.Body, totalSize)
+		if err != nil {
+			panic(err)
 		}
 
 	}
@@ -84,13 +95,13 @@ func parseContentRange(contentRange string) (totalSize int64, partFrom int64, pa
 		panic(err)
 	}
 
-	splitted := strings.Split(fromTo, "-")
+	rangeSplit := strings.Split(fromTo, "-")
 
-	partFrom, err = strconv.ParseInt(splitted[0], 10, 64)
+	partFrom, err = strconv.ParseInt(rangeSplit[0], 10, 64)
 	if err != nil {
 		panic(err)
 	}
-	partTo, err = strconv.ParseInt(splitted[1], 10, 64)
+	partTo, err = strconv.ParseInt(rangeSplit[1], 10, 64)
 	if err != nil {
 		panic(err)
 	}
