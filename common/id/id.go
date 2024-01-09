@@ -89,3 +89,7 @@ func IsValid(id Id) (bool, error) {
 func padPrefix(prefix string) string {
 	return fmt.Sprintf("%s00000", prefix)[:idPrefixLength]
 }
+
+func padPrefixType(prefixType string) string {
+	return fmt.Sprintf("%s0000000000000000", prefixType)[:idLength-idPrefixLength]
+}

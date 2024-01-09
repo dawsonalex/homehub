@@ -36,7 +36,7 @@ func TestPadPrefix(t *testing.T) {
 }
 
 func TestNew(t *testing.T) {
-	_ = RegisterType("PAD", "00000000TEST_PAD")
+	_ = RegisterType("PAD", "TEST_PAD")
 	id, err := NewFromSequence("PAD", 1)
 	if err != nil {
 		t.Error(err)

@@ -40,6 +40,7 @@ func RegisterType(typePrefix, typeKey string) error {
 		return ErrPrefixExists
 	}
 
+	typeKey = padPrefixType(typeKey)
 	registry.typeMap[typePrefix] = typeKey
 	return nil
 }
