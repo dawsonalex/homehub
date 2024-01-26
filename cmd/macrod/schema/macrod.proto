@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package schema;
+
+import "google/protobuf/wrappers.proto";
+
+option go_package = "github.com/dawsonalex/homehub/cmd/macrod/schema";
+
+service Macrod {
+  rpc CreateFoodListing (FoodListing) returns (FoodListing) {}
+  rpc GetFoodListing (google.protobuf.StringValue) returns (FoodListing) {}
+  rpc UpdateFoodListing (FoodListing) returns (FoodListing) {}
+}
+
+message Macros {
+  float carbs = 1;
+  float fats = 2;
+  float proteins = 3;
+}
+
+// FoodListing is a representation of a food and macros
+message FoodListing {
+  string id = 1;
+  string name = 2;
+
+  // A map of macros per serving type associated with the food
+  // e.g "100g" => [10g fat, 20g, carbs, 30g protein]
+  map<string, Macros> macrosPerServing = 3;
+}
+
+// FoodEntry is an actual recording of food in a diary.
+message FoodEntry {
+  string id = 1;
+  string listingId = 2;
+  string selectServingSize = 3;
+  float servingQuantity = 4;
+}
+
+// Meal is a collection of food entries and their
+// collective nutrients.
+message Meal {
+  string id = 1;
+  string name = 2;
+  repeated FoodEntry food = 3;
+  uint32 calories = 4;
+  Macros macros = 5;
+}
