@@ -12,14 +12,18 @@ type Serving struct {
 }
 
 func (s Serving) Calories() int {
-	return int((s.macros.carbs * CaloriesPer1gCarbohydrate) *
-		(s.macros.fats * CaloriesPer1gFat) *
-		(s.macros.proteins * CaloriesPer1gProtein))
+	return int((s.macros.Carbs * CaloriesPer1gCarbohydrate) *
+		(s.macros.Fats * CaloriesPer1gFat) *
+		(s.macros.Proteins * CaloriesPer1gProtein))
 }
 
 func (s Serving) Macros() (carbs, fats, proteins float64) {
-	return s.macros.carbs, s.macros.fats, s.macros.proteins
+	return s.macros.Carbs, s.macros.Fats, s.macros.Proteins
 
+}
+
+func (s Serving) Size() string {
+	return s.size
 }
 
 func NewServing(size string, macros Macros) Serving {

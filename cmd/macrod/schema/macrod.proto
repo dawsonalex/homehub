@@ -10,6 +10,10 @@ service Macrod {
   rpc CreateFoodListing (FoodListing) returns (FoodListing) {}
   rpc GetFoodListing (google.protobuf.StringValue) returns (FoodListing) {}
   rpc UpdateFoodListing (FoodListing) returns (FoodListing) {}
+
+  rpc CreateMeal (Meal) returns (Meal) {}
+  rpc AddFoodToMeal (UpdateMealRequest) returns (Meal) {}
+  rpc GetMeal (google.protobuf.StringValue) returns (Meal) {}
 }
 
 message Macros {
@@ -44,4 +48,9 @@ message Meal {
   repeated FoodEntry food = 3;
   uint32 calories = 4;
   Macros macros = 5;
+}
+
+message UpdateMealRequest {
+  string mealId = 1;
+  repeated string servingId = 2;
 }

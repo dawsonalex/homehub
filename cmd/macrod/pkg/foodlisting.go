@@ -1,12 +1,18 @@
 package pkg
 
+import "github.com/google/uuid"
+
 type FoodListing struct {
-	name     string
+	Id       uuid.UUID
+	Name     string
 	servings map[string]Serving
 }
 
-func (f FoodListing) Name() string {
-	return f.name
+func NewFoodListing(name string) FoodListing {
+	return FoodListing{
+		Name:     name,
+		servings: map[string]Serving{},
+	}
 }
 
 func (f FoodListing) Servings() []Serving {
@@ -19,4 +25,14 @@ func (f FoodListing) Servings() []Serving {
 		i++
 	}
 	return servings
+}
+
+func (f FoodListing) AddServing(size string, macros Macros) {
+	if f.servings == nil {
+		f.servings = make(map[string]Serving)
+	}
+	f.servings[size] = Serving{
+		size:   size,
+		macros: macros,
+	}
 }
