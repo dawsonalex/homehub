@@ -49,11 +49,11 @@ add-fixture:
 
 .PHONY:migrate-up
 migrate-up:
-	$(GOOSE_RUN) -dir db/migrations postgres $(POSTGRES_URI) up
+	$(GOOSE_RUN) -dir pkg/db/postgres/migrations postgres $(POSTGRES_URI) up
 
 .PHONY:migrate-down
 migrate-down:
-	$(GOOSE_RUN) -dir db/migrations postgres $(POSTGRES_URI) down
+	$(GOOSE_RUN) -dir pkg/db/postgres/migrations postgres $(POSTGRES_URI) down
 
 .PHONY:fixtures-up
 fixtures-up:

@@ -1,4 +1,3 @@
-version: '3'
 services:
   postgres:
     image: bitnami/postgresql:latest
@@ -26,11 +25,10 @@ services:
     working_dir: $PWD
     ports:
       - 8090:8090
-      - 9090:9090
     restart: on-failure
     depends_on:
       postgres:
         condition: service_healthy
     env_file:
       - .env
-    command: ["sh","-c","go mod download && air"]
+    command: ["sh","-c","go mod download && air -c air.toml"]
