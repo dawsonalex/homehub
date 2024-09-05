@@ -11,9 +11,8 @@ arch = $(word 2, $(temp))
 clean: 
 	rm -rv bin
 
-PLATFORMS := linux/amd64 windows/amd64 darwin/amd64 darwin/arm64
-
-release: $(PLATFORMS)
+build:
+	go build -o ./bin/macrod github.com/dawsonalex/homehub/cmd/macrod
 
 build-protoc: $(PROTOC_FILE)
 

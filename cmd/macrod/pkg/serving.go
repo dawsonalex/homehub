@@ -1,5 +1,7 @@
 package pkg
 
+import "github.com/google/uuid"
+
 const (
 	CaloriesPer1gProtein      = 4
 	CaloriesPer1gCarbohydrate = 4
@@ -7,13 +9,16 @@ const (
 )
 
 type Serving struct {
+	Id uuid.UUID
+
+	// size is a descriptive name for the Serving, such as "100g".
 	size   string
 	macros Macros
 }
 
 func (s Serving) Calories() int {
-	return int((s.macros.Carbs * CaloriesPer1gCarbohydrate) *
-		(s.macros.Fats * CaloriesPer1gFat) *
+	return int((s.macros.Carbs * CaloriesPer1gCarbohydrate) +
+		(s.macros.Fats * CaloriesPer1gFat) +
 		(s.macros.Proteins * CaloriesPer1gProtein))
 }
 

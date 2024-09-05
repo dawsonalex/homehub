@@ -1,13 +1,16 @@
 package pkg
 
+import "github.com/google/uuid"
+
 type FoodEntry struct {
 	FoodListing
-	selectedServingName string
-	Quantity            float64
+	ID                uuid.UUID `json:"id"`
+	SelectedServingId uuid.UUID
+	Quantity          float64
 }
 
 func (f FoodEntry) SelectedServing() Serving {
-	return f.servings[f.selectedServingName]
+	return f.servings[f.SelectedServingId]
 }
 
 // Calories returns the number of calories for 100g of Food to nearest whole number.

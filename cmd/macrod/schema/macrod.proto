@@ -3,6 +3,7 @@ syntax = "proto3";
 package schema;
 
 import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
 
 option go_package = "github.com/dawsonalex/homehub/cmd/macrod/schema";
 
@@ -14,6 +15,8 @@ service Macrod {
   rpc CreateMeal (Meal) returns (Meal) {}
   rpc AddFoodToMeal (UpdateMealRequest) returns (Meal) {}
   rpc GetMeal (google.protobuf.StringValue) returns (Meal) {}
+
+  rpc Version(google.protobuf.Empty) returns (VersionResponse) {}
 }
 
 message Macros {
@@ -53,4 +56,11 @@ message Meal {
 message UpdateMealRequest {
   string mealId = 1;
   repeated string servingId = 2;
+}
+
+message VersionResponse {
+  string major = 1;
+  string minor = 2;
+  string point = 3;
+  string build = 4;
 }

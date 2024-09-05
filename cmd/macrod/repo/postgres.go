@@ -6,6 +6,7 @@ package repo
 
 import (
 	"context"
+	"fmt"
 	"github.com/dawsonalex/homehub/cmd/macrod/pkg"
 	"github.com/dawsonalex/homehub/pkg/db/postgres"
 	"github.com/dawsonalex/homehub/pkg/db/postgres/gen/macrod/public/model"
@@ -87,27 +88,26 @@ func (p *Postgres) AddFoodListing(ctx context.Context, listing pkg.FoodListing) 
 		return pkg.FoodListing{}, errors.Wrap(err, "error reading returned food listing row")
 	}
 
-	servings, err := p.insertServings(ctx, &foodListingModel.ID, listing.Servings())
-	if err != nil {
-		return pkg.FoodListing{}, err
+	modelServings := []model.Servings{}
+	if servings := listing.Servings(); len(servings) > 0 {
+		modelServings, err = p.AddServing(ctx, &foodListingModel.ID, servings)
+		if err != nil {
+			return pkg.FoodListing{}, err
+		}
 	}
 
 	newListing := pkg.FoodListing{
 		Id:   foodListingModel.ID,
 		Name: foodListingModel.Name,
 	}
-	for _, serving := range servings {
-		newListing.AddServing(serving.Name, pkg.NewMacros(
-			serving.Carbs,
-			serving.Fats,
-			serving.Protein,
-		))
+	for _, serving := range modelServings {
+		newListing.AddServing(pkg.NewServing(serving.Name, pkg.NewMacros(serving.Carbs, serving.Fats, serving.Protein)))
 	}
 
 	return newListing, nil
 }
 
-func (p *Postgres) insertServings(ctx context.Context, foodListingId *uuid.UUID, servings []pkg.Serving) ([]model.Servings, error) {
+func (p *Postgres) AddServing(ctx context.Context, foodListingId *uuid.UUID, servings []pkg.Serving) ([]model.Servings, error) {
 	log.Printf("adding servings %d: %v", len(servings), servings)
 	models := make([]model.Servings, len(servings))
 	for i, serving := range servings {
@@ -133,10 +133,18 @@ func (p *Postgres) insertServings(ctx context.Context, foodListingId *uuid.UUID,
 
 	resultModels := make([]model.Servings, len(servings))
 	// TODO: error reporting of statement, rows affected, and metrics to ctx.
+	query, args := insertStmt.Sql()
+	fmt.Printf("query: %s, args: %+v\n", query, args)
 	err := insertStmt.QueryContext(ctx, p.DB, &resultModels)
 	if err != nil {
 		return []model.Servings{}, errors.Wrap(err, "can't insert serving")
 	}
+
+	//servings := make([]model.Servings, len(models))
+	//// TODO: Update repo stuff so that it returns pkg level components. The model stuff should be contained to this layer.
+	//for i, serving := range models {
+	//	servings[i] = pkgjhfl
+	//}
 
 	return resultModels, nil
 }

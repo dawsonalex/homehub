@@ -1,21 +1,23 @@
 package pkg
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 type FoodListing struct {
 	Id       uuid.UUID
 	Name     string
-	servings map[string]Serving
+	servings map[uuid.UUID]Serving
 }
 
 func NewFoodListing(name string) FoodListing {
 	return FoodListing{
 		Name:     name,
-		servings: map[string]Serving{},
+		servings: map[uuid.UUID]Serving{},
 	}
 }
 
-func (f FoodListing) Servings() []Serving {
+func (f *FoodListing) Servings() []Serving {
 	// Note: This might need making safe for concurrent use at some point
 	// TODO: cache this list
 	servings := make([]Serving, len(f.servings))
@@ -27,12 +29,10 @@ func (f FoodListing) Servings() []Serving {
 	return servings
 }
 
-func (f FoodListing) AddServing(size string, macros Macros) {
+func (f *FoodListing) AddServing(serving Serving) {
 	if f.servings == nil {
-		f.servings = make(map[string]Serving)
+		f.servings = make(map[uuid.UUID]Serving)
 	}
-	f.servings[size] = Serving{
-		size:   size,
-		macros: macros,
-	}
+
+	f.servings[serving.Id] = serving
 }

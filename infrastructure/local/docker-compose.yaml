@@ -31,4 +31,4 @@ services:
         condition: service_healthy
     env_file:
       - .env
-    command: ["sh","-c","go mod download && air -c air.toml"]
+#    command: ["sh","-c","go mod download && air -c air.toml"]

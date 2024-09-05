@@ -8,8 +8,19 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
+	"strings"
 )
+
+const version = "0.1.0.d8294dfae"
+
+type versionDetails struct {
+	major string
+	minor string
+	point string
+	build string
+}
 
 type server struct {
 	schema.UnimplementedMacrodServer
@@ -20,7 +31,7 @@ func (s *server) CreateFoodListing(ctx context.Context, listing *schema.FoodList
 	newListing := pkg.NewFoodListing(listing.Name)
 	for size, serving := range listing.MacrosPerServing {
 		// TODO: sort real num sizing between DB and proto
-		newListing.AddServing(size, pkg.NewMacros(float64(serving.Carbs), float64(serving.Fats), float64(serving.Proteins)))
+		newListing.AddServing(pkg.NewServing(size, pkg.NewMacros(float64(serving.Carbs), float64(serving.Fats), float64(serving.Proteins))))
 	}
 
 	newListing, err := s.repo.AddFoodListing(ctx, newListing)
@@ -95,4 +106,14 @@ func pkgToSchemaFoodEntry(entry pkg.FoodEntry) schema.FoodEntry {
 		SelectServingSize: entry.SelectedServing().Size(),
 		ServingQuantity:   float32(entry.Quantity),
 	}
+}
+
+func (s *server) Version(context.Context, *emptypb.Empty) (*schema.VersionResponse, error) {
+	splitVersion := strings.Split(version, ".")
+	return &schema.VersionResponse{
+		Major: splitVersion[0],
+		Minor: splitVersion[1],
+		Point: splitVersion[2],
+		Build: splitVersion[3],
+	}, nil
 }
